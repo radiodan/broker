@@ -3,12 +3,13 @@ package broker
 import (
 	zmq "github.com/pebbe/zmq4"
 	"log"
+	"runtime"
 	"time"
 )
 
 func (b *Broker) Poll(messageHandler *MessageHandler) {
 	b.Connect()
-	defer b.Close()
+	runtime.SetFinalizer(b, (*Broker).Close)
 
 	poller := zmq.NewPoller()
 	poller.Add(b.socket, zmq.POLLIN)
@@ -23,10 +24,11 @@ func (b *Broker) Poll(messageHandler *MessageHandler) {
 		}
 
 		if len(polled) <= 0 {
+			// TODO: heartbeat
 			continue
 		}
 
-		msg, err := b.socket.RecvMessage(1)
+		msg, err := b.socket.RecvMessage(0)
 
 		if err != nil {
 			log.Println("E: Interrupted")
