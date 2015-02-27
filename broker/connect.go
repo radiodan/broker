@@ -10,7 +10,6 @@ func (b *Broker) Connect() {
 	context, err := zmq.NewContext()
 
 	b.socket, err = context.NewSocket(zmq.ROUTER)
-	defer b.socket.Close()
 
 	if err != nil {
 		log.Printf("Could not start broker: %v\n", err)
@@ -18,6 +17,8 @@ func (b *Broker) Connect() {
 	}
 
 	b.socket.Bind(b.endpoint)
+}
 
-	b.poll()
+func (b *Broker) Close() {
+	b.socket.Close()
 }

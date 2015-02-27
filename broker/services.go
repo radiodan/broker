@@ -1,4 +1,4 @@
-package services
+package broker
 
 import (
 	"errors"
@@ -17,13 +17,8 @@ type ServiceType struct {
 	instances map[string]*Worker
 }
 
-type Worker struct {
-	Name     string // human readable id
-	Identity string // routing frame
-}
-
-func NewServiceDirectory() ServiceDirectory {
-	return ServiceDirectory{
+func NewServiceDirectory() *ServiceDirectory {
+	return &ServiceDirectory{
 		services: make(map[string]*ServiceType),
 		workers:  make(map[string]*Worker),
 		index:    make(map[string][]string),

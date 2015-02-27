@@ -2,22 +2,23 @@ package broker
 
 import (
 	zmq "github.com/pebbe/zmq4"
-	"github.com/radiodan/broker/services"
 	"log"
 	"time"
 )
 
-func (b *Broker) poll() {
+func (b *Broker) Poll(messageHandler *MessageHandler) {
+	b.Connect()
+	defer b.Close()
+
 	poller := zmq.NewPoller()
 	poller.Add(b.socket, zmq.POLLIN)
-
-	serviceDirectory := services.NewServiceDirectory()
 
 	for {
 		polled, err := poller.Poll(time.Second * 10)
 
 		if err != nil {
 			log.Println("E: Interrupted")
+			log.Printf("%q\n", err)
 			break //  Interrupted
 		}
 
@@ -26,59 +27,36 @@ func (b *Broker) poll() {
 
 			if err != nil {
 				log.Println("E: Interrupted")
+				log.Printf("%q\n", err)
 				break //  Interrupted
 			}
 
-			sender := msg[0]
-			protocol := msg[1]
-			command := msg[2]
-			data := msg[3:]
+			message, err := NewMessage(msg)
 
-			if protocol == "MDPW02" && command == "1" {
-				log.Printf("I: %s is a worker\n", sender)
-				serviceType := data[0]
-				for _, serviceInstance := range data[1:] {
-					log.Printf("?: %q\n", serviceInstance)
-					serviceDirectory.AddWorker(sender, serviceType, serviceInstance)
-				}
+			if err != nil {
+				log.Println("!: Message malformed")
+				continue
 			}
 
-			if protocol == "MDPW02" && command == "2" {
-				log.Printf("I: %s replying\n", sender)
-				correlationID := data[1]
-				response := data[2:]
-				b.socket.SendMessage(data[0], correlationID, "SUCCESS", response)
+			response, err := messageHandler.Respond(message)
+
+			if err != nil {
+				log.Println("!: Could not respond")
+				continue
 			}
 
-			if protocol == "MDPC02" && command == "1" {
-				log.Printf("I: %s is a client\n", sender)
-				log.Printf("I: data - %q", data)
-
-				//correlationId := data[0]
-				serviceType := data[1]
-				serviceInstance := data[2]
-				//msg := data[3:]
-
-				worker, err := serviceDirectory.WorkerForService(serviceType, serviceInstance)
-
-				if err != nil {
-					log.Printf("I: No worker for %s.%s", serviceType, serviceInstance)
-					return
-				}
-				log.Printf("I: sending data to worker %s", worker.Name)
-				msgCount, err := b.socket.SendMessage(worker.Identity, sender, data)
-				if err != nil {
-					log.Printf("! %x", err)
-				} else {
-					log.Printf("I: sent %i bytes", msgCount)
-				}
+			if len(response) == 0 {
+				log.Println("!: Will not respond")
+				continue
 			}
 
-			//log.Printf("I: received message: %q\n", msg)
-			//log.Printf("I: sender: %q\n", sender)
-			//log.Printf("I: protocol: %q\n", protocol)
-			//log.Printf("I: command: %q\n", command)
-			//log.Printf("I: data: %q\n", data)
+			msgCount, err := b.socket.SendMessage(response)
+
+			if err != nil {
+				log.Printf("! %x\n", err)
+			} else {
+				log.Printf("I: sent %i bytes\n", msgCount)
+			}
 		}
 	}
 }
