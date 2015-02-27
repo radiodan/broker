@@ -22,41 +22,43 @@ func (b *Broker) Poll(messageHandler *MessageHandler) {
 			break //  Interrupted
 		}
 
-		if len(polled) > 0 {
-			msg, err := b.socket.RecvMessage(1)
+		if len(polled) <= 0 {
+			continue
+		}
 
-			if err != nil {
-				log.Println("E: Interrupted")
-				log.Printf("%q\n", err)
-				break //  Interrupted
-			}
+		msg, err := b.socket.RecvMessage(1)
 
-			message, err := NewMessage(msg)
+		if err != nil {
+			log.Println("E: Interrupted")
+			log.Printf("%q\n", err)
+			break //  Interrupted
+		}
 
-			if err != nil {
-				log.Println("!: Message malformed")
-				continue
-			}
+		message, err := NewMessage(msg)
 
-			response, err := messageHandler.Respond(message)
+		if err != nil {
+			log.Println("!: Message malformed")
+			continue
+		}
 
-			if err != nil {
-				log.Println("!: Could not respond")
-				continue
-			}
+		response, err := messageHandler.Respond(message)
 
-			if len(response) == 0 {
-				log.Println("!: Will not respond")
-				continue
-			}
+		if err != nil {
+			log.Println("!: Could not respond")
+			continue
+		}
 
-			msgCount, err := b.socket.SendMessage(response)
+		if len(response) == 0 {
+			log.Println("!: Will not respond")
+			continue
+		}
 
-			if err != nil {
-				log.Printf("! %x\n", err)
-			} else {
-				log.Printf("I: sent %i bytes\n", msgCount)
-			}
+		msgCount, err := b.socket.SendMessage(response)
+
+		if err != nil {
+			log.Printf("! %x\n", err)
+		} else {
+			log.Printf("I: sent %i bytes\n", msgCount)
 		}
 	}
 }
