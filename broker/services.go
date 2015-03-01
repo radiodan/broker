@@ -34,6 +34,8 @@ func (serviceDirectory *ServiceDirectory) AddWorker(identity string, serviceType
 		worker = &Worker{
 			Identity: identity,
 			Name:     name,
+			Ready:    true,
+			Queue:    make([][]string, 0),
 		}
 
 		serviceDirectory.workers[identity] = worker

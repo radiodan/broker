@@ -43,24 +43,26 @@ func (b *Broker) Poll(messageHandler *MessageHandler) {
 			continue
 		}
 
-		response, err := messageHandler.Respond(message)
+		responses, err := messageHandler.Respond(message)
 
 		if err != nil {
 			log.Println("!: Could not respond")
 			continue
 		}
 
-		if len(response) == 0 {
+		if len(responses) == 0 {
 			log.Println("!: Will not respond")
 			continue
 		}
 
-		msgCount, err := b.socket.SendMessage(response)
+		for _, response := range responses {
+			msgCount, err := b.socket.SendMessage(response)
 
-		if err != nil {
-			log.Printf("! %x\n", err)
-		} else {
-			log.Printf("I: sent %i bytes\n", msgCount)
+			if err != nil {
+				log.Printf("! %x\n", err)
+			} else {
+				log.Printf("I: sent %i bytes\n", msgCount)
+			}
 		}
 	}
 }

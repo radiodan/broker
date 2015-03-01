@@ -17,7 +17,7 @@ func NewMessageHandler(service *ServiceDirectory) *MessageHandler {
 	return m
 }
 
-func (m *MessageHandler) Respond(msg *Message) ([]string, error) {
+func (m *MessageHandler) Respond(msg *Message) ([][]string, error) {
 	switch msg.Protocol {
 	case "MDPW02":
 		return m.workerHandler(msg)
@@ -25,6 +25,6 @@ func (m *MessageHandler) Respond(msg *Message) ([]string, error) {
 		return m.clientHandler(msg)
 	default:
 		errString := fmt.Sprintf("Unknown protocol %s", msg.Protocol)
-		return []string{}, errors.New(errString)
+		return make([][]string, 0), errors.New(errString)
 	}
 }
