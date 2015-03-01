@@ -2,10 +2,11 @@ package broker
 
 import (
 	"fmt"
+	zmq "github.com/pebbe/zmq4"
 	"log"
 )
 
-func (m *MessageHandler) clientHandler(msg *Message, channel chan []string) {
+func (m *MessageHandler) clientHandler(msg *Message, socket *zmq.Socket) {
 	switch msg.Command {
 	case "1":
 		log.Printf("I: %s is a client\n", msg.Sender)
@@ -33,7 +34,8 @@ func (m *MessageHandler) clientHandler(msg *Message, channel chan []string) {
 		res = append(res, msg.Payload...)
 
 		if worker.Ready {
-			channel <- res
+			worker.Ready = false
+			socket.SendMessage(res)
 		} else {
 			worker.Queue = append([][]string{res}, worker.Queue...)
 			log.Println("I: Appended msg for later processing")

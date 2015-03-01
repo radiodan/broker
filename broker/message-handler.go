@@ -1,8 +1,8 @@
 package broker
 
 import (
-	"errors"
-	"fmt"
+	zmq "github.com/pebbe/zmq4"
+	"log"
 )
 
 type MessageHandler struct {
@@ -17,14 +17,13 @@ func NewMessageHandler(service *ServiceDirectory) *MessageHandler {
 	return m
 }
 
-func (m *MessageHandler) Respond(msg *Message) ([][]string, error) {
+func (m *MessageHandler) Respond(msg *Message, socket *zmq.Socket) {
 	switch msg.Protocol {
 	case "MDPW02":
-		return m.workerHandler(msg)
+		m.workerHandler(msg, socket)
 	case "MDPC02":
-		return m.clientHandler(msg)
+		m.clientHandler(msg, socket)
 	default:
-		errString := fmt.Sprintf("Unknown protocol %s", msg.Protocol)
-		return make([][]string, 0), errors.New(errString)
+		log.Printf("Unknown protocol %s", msg.Protocol)
 	}
 }
