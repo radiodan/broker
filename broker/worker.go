@@ -5,6 +5,7 @@ type Worker struct {
 	Identity string     // routing frame
 	Ready    bool       // ready to recieve work
 	Queue    [][]string // pending messages to process
+	Services Services   // Array of registered services
 }
 
 func (w *Worker) NextMsg() (msg []string, exists bool) {

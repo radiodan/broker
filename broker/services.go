@@ -4,7 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 )
+
+type Services map[string][]string
 
 type ServiceDirectory struct {
 	services map[string]*ServiceType
@@ -17,6 +20,26 @@ type ServiceType struct {
 	instances map[string]*Worker
 }
 
+func NewServiceMessage(serviceArray []string) (services Services, err error) {
+	services = Services{}
+
+	for _, service := range serviceArray {
+		sSplit := strings.Split(service, ".")
+
+		if len(sSplit) != 2 {
+			err := errors.New("Invalid service list")
+			return services, err
+		}
+
+		serviceType := sSplit[0]
+		serviceInstance := sSplit[1]
+
+		services[serviceType] = append(services[serviceType], serviceInstance)
+	}
+
+	return
+}
+
 func NewServiceDirectory() *ServiceDirectory {
 	return &ServiceDirectory{
 		services: make(map[string]*ServiceType),
@@ -25,46 +48,80 @@ func NewServiceDirectory() *ServiceDirectory {
 	}
 }
 
-func (serviceDirectory *ServiceDirectory) AddWorker(identity string, serviceTypeName string, serviceInstanceName string) {
+func (serviceDirectory *ServiceDirectory) AddWorker(identity string, services Services) (err error) {
+	// validate services
+	name := fmt.Sprintf("%q", identity)
+	invalidServices := serviceDirectory.validateServicesForWorker(name, services)
+
+	if len(invalidServices) > 0 {
+		errString := fmt.Sprintf(
+			"Worker %s cannot register services %q",
+			name, strings.Join(invalidServices, ", "),
+		)
+		err = errors.New(errString)
+		return err
+	}
+
 	// create or return worker
 	worker, exists := serviceDirectory.workers[identity]
 
 	if exists == false {
-		name := fmt.Sprintf("%q", identity)
 		worker = &Worker{
 			Identity: identity,
 			Name:     name,
 			Ready:    true,
 			Queue:    make([][]string, 0),
+			Services: services,
 		}
 
 		serviceDirectory.workers[identity] = worker
 	}
 
-	log.Printf("?: Worker - %q", worker)
+	for serviceTypeName, serviceInstances := range services {
+		// create or return serviceType
+		serviceType, exists := serviceDirectory.services[serviceTypeName]
 
-	// create or return serviceType
-	serviceType, exists := serviceDirectory.services[serviceTypeName]
+		if exists == false {
+			serviceType = &ServiceType{
+				name:      serviceTypeName,
+				instances: make(map[string]*Worker),
+			}
 
-	if exists == false {
-		serviceType = &ServiceType{
-			name:      serviceTypeName,
-			instances: make(map[string]*Worker),
+			serviceDirectory.services[serviceTypeName] = serviceType
 		}
 
-		serviceDirectory.services[serviceTypeName] = serviceType
+		// register serviceInstance, or err if already found
+		for _, serviceInstanceName := range serviceInstances {
+			log.Printf("Adding worker %s to %s.%s",
+				worker.Name, serviceTypeName, serviceInstanceName)
+			serviceType.instances[serviceInstanceName] = worker
+			// add to index
+			serviceDirectory.index[serviceTypeName] = append(serviceDirectory.index[serviceTypeName], serviceInstanceName)
+		}
+
+	}
+	log.Printf("?: Worker - %q", worker)
+
+	return
+}
+
+func (serviceDirectory *ServiceDirectory) validateServicesForWorker(name string, services Services) (invalidServices []string) {
+	for sType, sInstances := range services {
+		for sInstance := range sInstances {
+			_, exists := serviceDirectory.index[sType]
+			if exists == false {
+				continue
+			}
+
+			for instance, workerName := range serviceDirectory.index[sType] {
+				if instance == sInstance && workerName != name {
+					invalidServices = append(invalidServices, fmt.Sprintf("%s.%s", sType, sInstance))
+				}
+			}
+		}
 	}
 
-	// register serviceInstance, or err if already found
-	_, exists = serviceType.instances[serviceInstanceName]
-
-	if exists == false {
-		log.Printf("Adding worker %q to %s.%s", worker, serviceTypeName, serviceInstanceName)
-		serviceType.instances[serviceInstanceName] = worker
-	}
-
-	// add to index
-	serviceDirectory.index[serviceTypeName] = append(serviceDirectory.index[serviceTypeName], serviceInstanceName)
+	return
 }
 
 func (serviceDirectory *ServiceDirectory) WorkerForService(serviceTypeName string, serviceInstanceName string) (serviceWorker *Worker, err error) {

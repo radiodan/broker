@@ -8,11 +8,24 @@ import (
 func (m *MessageHandler) workerHandler(msg *Message, socket *zmq.Socket) {
 	switch msg.Command {
 	case "1":
-		log.Printf("I: %s is a worker\n", msg.Sender)
-		serviceType := msg.Payload[0]
-		for _, serviceInstance := range msg.Payload[1:] {
-			log.Printf("?: %q\n", serviceInstance)
-			m.Service.AddWorker(msg.Sender, serviceType, serviceInstance)
+		log.Printf("I: %s is a worker", msg.Sender)
+		services, err := NewServiceMessage(msg.Payload)
+
+		if err != nil {
+			log.Printf(
+				"!: Services invalid for worker %s: %v", msg.Sender, msg.Payload,
+			)
+			// TODO: send worker rejection
+			return
+		}
+
+		err = m.Service.AddWorker(msg.Sender, services)
+
+		if err != nil {
+			log.Printf(
+				"!: Failed to add worker %s: %s", msg.Sender, err,
+			)
+			// TODO: send worker rejection
 		}
 		return
 	case "2":
