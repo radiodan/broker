@@ -28,4 +28,4 @@ examples
 Godeps/*
 !Godeps/Godeps.json
 
-./broker
+broker
