@@ -12,6 +12,11 @@ func main() {
 	serviceDirectory := broker.NewServiceDirectory()
 	messageHandler := broker.NewMessageHandler(serviceDirectory)
 
+	go brokerServer.Poll(messageHandler)
+
 	log.Printf("Listening on %s\n", location)
-	brokerServer.Poll(messageHandler)
+
+	// cheap trick to keep the main thread running
+	forever := make(chan bool)
+	<-forever
 }
