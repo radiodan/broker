@@ -1,18 +1,18 @@
 package main
 
 import (
-	"github.com/radiodan/broker/broker"
+	"github.com/radiodan/broker/service"
 	"log"
 )
 
 func main() {
 	location := "tcp://127.0.0.1:7171"
-	brokerServer := broker.New(location)
+	serviceBroker := service.New(location)
 
-	serviceDirectory := broker.NewServiceDirectory()
-	messageHandler := broker.NewMessageHandler(serviceDirectory)
+	serviceDirectory := service.NewServiceDirectory()
+	messageHandler := service.NewMessageHandler(serviceDirectory)
 
-	go brokerServer.Poll(messageHandler)
+	go serviceBroker.Poll(messageHandler)
 
 	log.Printf("Listening on %s\n", location)
 

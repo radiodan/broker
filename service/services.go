@@ -1,4 +1,4 @@
-package broker
+package service
 
 import (
 	"errors"
