@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-func (b *Broker) Connect() {
+func (b *Broker) connect() {
 	// create connection socket
 	context, err := zmq.NewContext()
 
@@ -20,5 +20,8 @@ func (b *Broker) Connect() {
 }
 
 func (b *Broker) Close() {
-	b.socket.Close()
+	if b.socket != nil {
+		b.socket.Close()
+		b.socket = nil
+	}
 }
