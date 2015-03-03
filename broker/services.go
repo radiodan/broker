@@ -56,7 +56,7 @@ func (serviceDirectory *ServiceDirectory) AddWorker(identity string, services Se
 	if len(invalidServices) > 0 {
 		errString := fmt.Sprintf(
 			"Worker %s cannot register services %q",
-			name, strings.Join(invalidServices, ", "),
+			identity, strings.Join(invalidServices, ", "),
 		)
 		err = errors.New(errString)
 		return err
@@ -66,13 +66,7 @@ func (serviceDirectory *ServiceDirectory) AddWorker(identity string, services Se
 	worker, exists := serviceDirectory.workers[identity]
 
 	if exists == false {
-		worker = &Worker{
-			Identity: identity,
-			Name:     name,
-			Ready:    true,
-			Queue:    make([][]string, 0),
-			Services: services,
-		}
+		worker = NewWorker(identity, services)
 
 		serviceDirectory.workers[identity] = worker
 	}

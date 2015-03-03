@@ -1,0 +1,9 @@
+package broker
+
+import "time"
+
+const (
+	HEARTBEAT_LIVENESS = 3
+	HEARTBEAT_INTERVAL = 2500 * time.Millisecond
+	HEARTBEAT_EXPIRY   = HEARTBEAT_INTERVAL * HEARTBEAT_LIVENESS
+)

@@ -1,11 +1,37 @@
 package broker
 
+import (
+	"fmt"
+	"time"
+)
+
 type Worker struct {
-	Name     string     // human readable id
-	Identity string     // routing frame
-	Ready    bool       // ready to recieve work
-	Queue    [][]string // pending messages to process
+	Name     string     // Human readable id
+	Identity string     // Routing frame
+	Ready    bool       // Ready to recieve work
+	Queue    [][]string // Pending messages to process
 	Services Services   // Array of registered services
+	Expiry   time.Time  // Expires at unless heartbeat
+}
+
+func NewWorker(identity string, services Services) *Worker {
+	name := fmt.Sprintf("%q", identity)
+
+	worker := &Worker{
+		Identity: identity,
+		Name:     name,
+		Ready:    true,
+		Queue:    make([][]string, 0),
+		Services: services,
+	}
+
+	worker.Refresh()
+
+	return worker
+}
+
+func (w *Worker) Refresh() {
+	w.Expiry = time.Now().Add(HEARTBEAT_EXPIRY)
 }
 
 func (w *Worker) NextMsg() (msg []string, exists bool) {

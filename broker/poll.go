@@ -8,14 +8,14 @@ import (
 )
 
 func (b *Broker) Poll(messageHandler *MessageHandler) {
-	b.Connect()
+	b.connect()
 	runtime.SetFinalizer(b, (*Broker).Close)
 
 	poller := zmq.NewPoller()
 	poller.Add(b.socket, zmq.POLLIN)
 
 	for {
-		polled, err := poller.Poll(time.Second * 10)
+		polled, err := poller.Poll(HEARTBEAT_INTERVAL)
 
 		if err != nil {
 			log.Println("E: Interrupted")
@@ -25,6 +25,14 @@ func (b *Broker) Poll(messageHandler *MessageHandler) {
 
 		if len(polled) <= 0 {
 			// TODO: heartbeat
+			if time.Now().After(b.heartbeatAt) {
+				log.Println("I: Heartbeat")
+				//broker.Purge()
+				//for _, worker := range b.waiting {
+				//	worker.Send(WORKER_HEARTBEAT, []string{})
+				//}
+				b.heartbeatAt = time.Now().Add(HEARTBEAT_INTERVAL)
+			}
 			continue
 		}
 
