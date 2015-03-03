@@ -1,11 +1,10 @@
 package service
 
 import (
-	zmq "github.com/pebbe/zmq4"
 	"log"
 )
 
-func (m *MessageHandler) workerHandler(msg *Message, socket *zmq.Socket) {
+func (b *Broker) respondToWorker(msg *Message) {
 	switch msg.Command {
 	case "1":
 		log.Printf("I: %s is a worker", msg.Sender)
@@ -19,7 +18,7 @@ func (m *MessageHandler) workerHandler(msg *Message, socket *zmq.Socket) {
 			return
 		}
 
-		err = m.Service.AddWorker(msg.Sender, services)
+		err = b.Service.AddWorker(msg.Sender, services)
 
 		if err != nil {
 			log.Printf(
@@ -35,9 +34,9 @@ func (m *MessageHandler) workerHandler(msg *Message, socket *zmq.Socket) {
 		r := []string{msg.Payload[0], correlationID, "SUCCESS"}
 		r = append(r, response...)
 
-		socket.SendMessage(r)
+		b.Socket.SendMessage(r)
 
-		worker, exists := m.Service.workers[msg.Sender]
+		worker, exists := b.Service.workers[msg.Sender]
 
 		if exists != true {
 			return
@@ -48,7 +47,7 @@ func (m *MessageHandler) workerHandler(msg *Message, socket *zmq.Socket) {
 		r, exists = worker.NextMsg()
 
 		if exists == true {
-			socket.SendMessage(r)
+			b.Socket.SendMessage(r)
 			worker.Ready = false
 		}
 	default:

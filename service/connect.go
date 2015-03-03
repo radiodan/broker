@@ -6,22 +6,22 @@ import (
 )
 
 func (b *Broker) connect() {
-	// create connection socket
+	// create connection Socket
 	context, err := zmq.NewContext()
 
-	b.socket, err = context.NewSocket(zmq.ROUTER)
+	b.Socket, err = context.NewSocket(zmq.ROUTER)
 
 	if err != nil {
 		log.Printf("Could not start broker: %v\n", err)
 		return
 	}
 
-	b.socket.Bind(b.endpoint)
+	b.Socket.Bind(b.Endpoint)
 }
 
 func (b *Broker) Close() {
-	if b.socket != nil {
-		b.socket.Close()
-		b.socket = nil
+	if b.Socket != nil {
+		b.Socket.Close()
+		b.Socket = nil
 	}
 }

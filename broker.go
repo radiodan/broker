@@ -6,15 +6,12 @@ import (
 )
 
 func main() {
-	location := "tcp://127.0.0.1:7171"
-	serviceBroker := service.New(location)
+	serviceLocation := "tcp://127.0.0.1:7171"
+	serviceBroker := service.New(serviceLocation)
 
-	serviceDirectory := service.NewServiceDirectory()
-	messageHandler := service.NewMessageHandler(serviceDirectory)
+	go serviceBroker.Poll()
 
-	go serviceBroker.Poll(messageHandler)
-
-	log.Printf("Listening on %s\n", location)
+	log.Printf("Listening on %s", serviceLocation)
 
 	// cheap trick to keep the main thread running
 	forever := make(chan bool)

@@ -6,13 +6,15 @@ import (
 )
 
 type Broker struct {
-	endpoint    string
-	socket      *zmq.Socket
-	heartbeatAt time.Time
+	Endpoint    string
+	Socket      *zmq.Socket
+	HeartbeatAt time.Time
+	Service     *ServiceDirectory
 }
 
 func New(endpoint string) (b Broker) {
-	b.endpoint = endpoint
-	b.heartbeatAt = time.Now().Add(HEARTBEAT_INTERVAL)
+	b.Endpoint = endpoint
+	b.HeartbeatAt = time.Now().Add(HEARTBEAT_INTERVAL)
+	b.Service = NewServiceDirectory()
 	return
 }

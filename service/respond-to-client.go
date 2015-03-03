@@ -2,11 +2,10 @@ package service
 
 import (
 	"fmt"
-	zmq "github.com/pebbe/zmq4"
 	"log"
 )
 
-func (m *MessageHandler) clientHandler(msg *Message, socket *zmq.Socket) {
+func (b *Broker) respondToClient(msg *Message) {
 	switch msg.Command {
 	case "1":
 		log.Printf("I: %s is a client\n", msg.Sender)
@@ -17,7 +16,7 @@ func (m *MessageHandler) clientHandler(msg *Message, socket *zmq.Socket) {
 		serviceInstance := msg.Payload[2]
 		//payload := msg.Payload[3:]
 
-		worker, err := m.Service.WorkerForService(serviceType, serviceInstance)
+		worker, err := b.Service.WorkerForService(serviceType, serviceInstance)
 
 		if err != nil {
 			errMsg := fmt.Sprintf("!: No worker for %s.%s", serviceType, serviceInstance)
@@ -35,7 +34,7 @@ func (m *MessageHandler) clientHandler(msg *Message, socket *zmq.Socket) {
 
 		if worker.Ready {
 			worker.Ready = false
-			socket.SendMessage(res)
+			b.Socket.SendMessage(res)
 		} else {
 			worker.Queue = append([][]string{res}, worker.Queue...)
 			log.Println("I: Appended msg for later processing")
