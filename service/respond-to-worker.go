@@ -5,6 +5,13 @@ import (
 )
 
 func (b *Broker) respondToWorker(msg *Message) {
+	worker, exists := b.Service.workers[msg.Sender]
+
+	if exists == true {
+		// reset heartbeat expiry
+		worker.Refresh()
+	}
+
 	switch msg.Command {
 	case "1":
 		log.Printf("I: %s is a worker", msg.Sender)

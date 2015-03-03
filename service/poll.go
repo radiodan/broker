@@ -42,14 +42,10 @@ func (b *Broker) Poll() {
 			b.Respond(message)
 		}
 
-		// TODO: heartbeat
 		if time.Now().After(b.HeartbeatAt) {
 			log.Println("I: Heartbeat")
-			//broker.Purge()
-			//for _, worker := range b.waiting {
-			//	worker.Send(WORKER_HEARTBEAT, []string{})
-			//}
-			b.HeartbeatAt = time.Now().Add(HEARTBEAT_INTERVAL)
+			b.Purge()
+			b.Heartbeat()
 		}
 	}
 }
