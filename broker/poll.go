@@ -23,34 +23,33 @@ func (b *Broker) Poll(messageHandler *MessageHandler) {
 			break //  Interrupted
 		}
 
-		if len(polled) <= 0 {
-			// TODO: heartbeat
-			if time.Now().After(b.heartbeatAt) {
-				log.Println("I: Heartbeat")
-				//broker.Purge()
-				//for _, worker := range b.waiting {
-				//	worker.Send(WORKER_HEARTBEAT, []string{})
-				//}
-				b.heartbeatAt = time.Now().Add(HEARTBEAT_INTERVAL)
+		if len(polled) > 0 {
+			msg, err := b.socket.RecvMessage(0)
+
+			if err != nil {
+				log.Println("E: Interrupted")
+				log.Printf("%q\n", err)
+				break //  Interrupted
 			}
-			continue
+
+			message, err := NewMessage(msg)
+
+			if err != nil {
+				log.Println("!: Message malformed")
+				continue
+			}
+
+			messageHandler.Respond(message, b.socket)
 		}
 
-		msg, err := b.socket.RecvMessage(0)
-
-		if err != nil {
-			log.Println("E: Interrupted")
-			log.Printf("%q\n", err)
-			break //  Interrupted
+		// TODO: heartbeat
+		if time.Now().After(b.heartbeatAt) {
+			log.Println("I: Heartbeat")
+			//broker.Purge()
+			//for _, worker := range b.waiting {
+			//	worker.Send(WORKER_HEARTBEAT, []string{})
+			//}
+			b.heartbeatAt = time.Now().Add(HEARTBEAT_INTERVAL)
 		}
-
-		message, err := NewMessage(msg)
-
-		if err != nil {
-			log.Println("!: Message malformed")
-			continue
-		}
-
-		messageHandler.Respond(message, b.socket)
 	}
 }
