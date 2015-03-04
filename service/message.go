@@ -15,11 +15,19 @@ type Message struct {
 func NewMessage(params []string) (*Message, error) {
 	var err error
 
+	if len(params) < 3 {
+		err = errors.New("Invalid message format")
+		return nil, err
+	}
+
 	m := &Message{
 		Sender:   params[0],
 		Protocol: params[1],
 		Command:  params[2],
-		Payload:  params[3:],
+	}
+
+	if len(params) > 3 {
+		m.Payload = params[3:]
 	}
 
 	if len(m.Sender) == 0 {
