@@ -99,6 +99,34 @@ func (serviceDirectory *ServiceDirectory) AddWorker(identity string, services Se
 	return
 }
 
+func (serviceDirectory *ServiceDirectory) RemoveWorker(worker *Worker) {
+	for sType, sInstances := range worker.Services {
+		for _, sInstance := range sInstances {
+			// copy the index instances array
+			instances := append([]string(nil), serviceDirectory.index[sType]...)
+
+			for i, inst := range serviceDirectory.index[sType] {
+				if inst == sInstance {
+					// remove matched instance from array
+					instances = append(
+						instances[:i],
+						instances[i+1:]...,
+					)
+				}
+			}
+
+			// replace index with new array
+			serviceDirectory.index[sType] = instances
+
+			//remove worker reference from services
+			delete(serviceDirectory.services[sType].instances, sInstance)
+		}
+	}
+
+	// remove worker
+	delete(serviceDirectory.workers, worker.Identity)
+}
+
 func (serviceDirectory *ServiceDirectory) validateServicesForWorker(name string, services Services) (invalidServices []string) {
 	for sType, sInstances := range services {
 		for sInstance := range sInstances {
