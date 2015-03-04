@@ -7,7 +7,7 @@ import (
 
 func (b *Broker) respondToClient(msg *Message) {
 	switch msg.Command {
-	case "1":
+	case COMMAND_READY:
 		log.Printf("I: %s is a client\n", msg.Sender)
 		log.Printf("I: msg.Payload - %q", msg.Payload)
 
@@ -28,13 +28,15 @@ func (b *Broker) respondToClient(msg *Message) {
 
 		res := []string{
 			worker.Identity,
+			COMMAND_REQUEST,
 			msg.Sender,
 		}
 		res = append(res, msg.Payload...)
 
-		if worker.Ready {
-			worker.Ready = false
+		if worker.Ready == true {
+			log.Printf("I: Send REQ %q", res)
 			b.Socket.SendMessage(res)
+			worker.Ready = false
 		} else {
 			worker.Queue = append([][]string{res}, worker.Queue...)
 			log.Println("I: Appended msg for later processing")

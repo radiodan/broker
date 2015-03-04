@@ -6,9 +6,9 @@ import (
 
 func (b *Broker) Respond(msg *Message) {
 	switch msg.Protocol {
-	case "MDPW02":
+	case PROTOCOL_WORKER:
 		b.respondToWorker(msg)
-	case "MDPC02":
+	case PROTOCOL_CLIENT:
 		b.respondToClient(msg)
 	default:
 		log.Printf("Unknown protocol %s", msg.Protocol)

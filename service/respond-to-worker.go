@@ -7,13 +7,15 @@ import (
 func (b *Broker) respondToWorker(msg *Message) {
 	worker, exists := b.Service.workers[msg.Sender]
 
-	if exists == true {
-		// reset heartbeat expiry
-		worker.Refresh()
-	}
-
 	switch msg.Command {
-	case "1":
+	case COMMAND_READY:
+		if exists == true {
+			// TODO: send worker rejection
+			// reset heartbeat expiry
+			worker.Refresh()
+			return
+		}
+
 		log.Printf("I: %s is a worker", msg.Sender)
 		services, err := NewServiceMessage(msg.Payload)
 
@@ -33,8 +35,7 @@ func (b *Broker) respondToWorker(msg *Message) {
 			)
 			// TODO: send worker rejection
 		}
-		return
-	case "2":
+	case COMMAND_REQUEST:
 		log.Printf("I: %s replying\n", msg.Sender)
 		correlationID := msg.Payload[1]
 		response := msg.Payload[2:]
@@ -49,13 +50,20 @@ func (b *Broker) respondToWorker(msg *Message) {
 			return
 		}
 
-		worker.Ready = true
+		// reset heartbeat expiry
+		worker.Refresh()
 
-		r, exists = worker.NextMsg()
+		r, messageWaiting := worker.NextMsg()
 
-		if exists == true {
+		if messageWaiting == true {
 			b.Socket.SendMessage(r)
-			worker.Ready = false
+		} else {
+			worker.Ready = true
+		}
+	case COMMAND_HEARTBEAT:
+		// reset heartbeat expiry
+		if exists == true {
+			worker.Refresh()
 		}
 	default:
 		log.Printf("!: Unknown command %s", msg.Command)

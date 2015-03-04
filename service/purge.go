@@ -13,9 +13,8 @@ func (b *Broker) Purge() (deletedWorkers []string) {
 
 		if worker.Expiry.Before(now) {
 			log.Printf("I: Removing worker %s", name)
-			// TODO: send real disconnect message
 			b.Socket.SendMessage(
-				worker.Identity, "MDPW_DISCONNECT", "", []string{},
+				worker.Identity, COMMAND_DISCONNECT, "", []string{},
 			)
 			deletedWorkers = append(deletedWorkers, name)
 			delete(b.Service.workers, name)
