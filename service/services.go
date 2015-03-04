@@ -55,7 +55,7 @@ func (serviceDirectory *ServiceDirectory) AddWorker(identity string, services Se
 
 	if len(invalidServices) > 0 {
 		errString := fmt.Sprintf(
-			"Worker %s cannot register services %q",
+			"Worker %s cannot register services %s",
 			identity, strings.Join(invalidServices, ", "),
 		)
 		err = errors.New(errString)
@@ -129,15 +129,18 @@ func (serviceDirectory *ServiceDirectory) RemoveWorker(worker *Worker) {
 
 func (serviceDirectory *ServiceDirectory) validateServicesForWorker(name string, services Services) (invalidServices []string) {
 	for sType, sInstances := range services {
-		for sInstance := range sInstances {
-			_, exists := serviceDirectory.index[sType]
-			if exists == false {
-				continue
-			}
+		// if the serviceType doesnt exist, all the instances can be registered
+		_, exists := serviceDirectory.index[sType]
+		if exists == false {
+			continue
+		}
 
-			for instance, workerName := range serviceDirectory.index[sType] {
-				if instance == sInstance && workerName != name {
-					invalidServices = append(invalidServices, fmt.Sprintf("%s.%s", sType, sInstance))
+		for _, sInstance := range sInstances {
+			for _, instance := range serviceDirectory.index[sType] {
+				if instance == sInstance {
+					invalidServices = append(
+						invalidServices, fmt.Sprintf("%s.%s", sType, sInstance),
+					)
 				}
 			}
 		}

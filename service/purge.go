@@ -15,9 +15,7 @@ func (b *Broker) Purge() {
 			log.Printf("I: Removing worker %s", name)
 
 			b.Service.RemoveWorker(worker)
-			b.Socket.SendMessage(
-				worker.Identity, COMMAND_DISCONNECT, "", []string{},
-			)
+			b.DisconnectWorker(worker.Identity, "Heartbeat Timeout")
 		}
 	}
 }

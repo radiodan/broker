@@ -1,7 +1,9 @@
 package service
 
 import (
+	"fmt"
 	"log"
+	"strings"
 )
 
 func (b *Broker) respondToWorker(msg *Message) {
@@ -10,7 +12,7 @@ func (b *Broker) respondToWorker(msg *Message) {
 	switch msg.Command {
 	case COMMAND_READY:
 		if exists == true {
-			// TODO: send worker rejection
+			// TODO: what to respond with?
 			// reset heartbeat expiry
 			worker.Refresh()
 			return
@@ -20,20 +22,23 @@ func (b *Broker) respondToWorker(msg *Message) {
 		services, err := NewServiceMessage(msg.Payload)
 
 		if err != nil {
-			log.Printf(
-				"!: Services invalid for worker %s: %v", msg.Sender, msg.Payload,
+			errString := fmt.Sprintf(
+				"Services invalid for worker %s: %s",
+				msg.Sender, strings.Join(msg.Payload, ","),
 			)
-			// TODO: send worker rejection
+			log.Println("!: " + errString)
+			b.DisconnectWorker(msg.Sender, errString)
 			return
 		}
 
 		err = b.Service.AddWorker(msg.Sender, services)
 
 		if err != nil {
-			log.Printf(
-				"!: Failed to add worker %s: %s", msg.Sender, err,
+			errString := fmt.Sprintf(
+				"Failed to add worker %s: %s", msg.Sender, err,
 			)
-			// TODO: send worker rejection
+			log.Println("!: " + errString)
+			b.DisconnectWorker(msg.Sender, errString)
 		}
 	case COMMAND_REQUEST:
 		log.Printf("I: %s replying\n", msg.Sender)
