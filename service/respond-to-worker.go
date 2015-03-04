@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 )
 
 func (b *Broker) respondToWorker(msg *Message) {
@@ -70,6 +71,15 @@ func (b *Broker) respondToWorker(msg *Message) {
 		if exists == true {
 			worker.Refresh()
 		}
+	case COMMAND_DISCONNECT:
+		worker, exists := b.Service.workers[msg.Sender]
+
+		if exists != true {
+			return
+		}
+
+		// set expiry to now, will be cleaned up during purge
+		worker.Expiry = time.Now()
 	default:
 		log.Printf("!: Unknown command %s", msg.Command)
 	}
