@@ -11,16 +11,17 @@ func (b *Broker) respondToClient(msg *Message) {
 		log.Printf("I: %s is a client\n", msg.Sender)
 		log.Printf("I: msg.Payload - %q", msg.Payload)
 
-		//correlationId := msg.Payload[0]
+		correlationId := msg.Payload[0]
 		serviceType := msg.Payload[1]
 		serviceInstance := msg.Payload[2]
-		//payload := msg.Payload[3:]
 
 		worker, err := b.Service.WorkerForService(serviceType, serviceInstance)
 
 		if err != nil {
-			errMsg := fmt.Sprintf("!: No worker for %s.%s", serviceType, serviceInstance)
-			log.Printf(errMsg)
+			errMsg := fmt.Sprintf("No worker for %s.%s", serviceType, serviceInstance)
+			log.Printf("!: %s", errMsg)
+
+			b.Socket.SendMessage(msg.Sender, correlationId, "FAIL", errMsg)
 			return
 		}
 
