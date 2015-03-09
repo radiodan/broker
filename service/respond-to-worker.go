@@ -59,10 +59,10 @@ func (b *Broker) respondToWorker(msg *Message) {
 		// reset heartbeat expiry
 		worker.Refresh()
 
-		r, messageWaiting := worker.NextMsg()
+		req, messageWaiting := worker.NextMsg()
 
 		if messageWaiting == true {
-			b.Socket.SendMessage(r)
+			b.Socket.SendMessage(req.Serialize())
 		} else {
 			worker.Ready = true
 		}

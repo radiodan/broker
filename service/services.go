@@ -115,8 +115,13 @@ func (serviceDirectory *ServiceDirectory) RemoveWorker(worker *Worker) {
 				}
 			}
 
-			// replace index with new array
-			serviceDirectory.index[sType] = instances
+			if len(instances) == 0 {
+				// remove entry from index
+				delete(serviceDirectory.index, sType)
+			} else {
+				// replace index with new array
+				serviceDirectory.index[sType] = instances
+			}
 
 			//remove worker reference from services
 			delete(serviceDirectory.services[sType].instances, sInstance)
@@ -173,4 +178,21 @@ func (serviceDirectory *ServiceDirectory) WorkerForService(serviceTypeName strin
 
 	err = errors.New("Unknown serviceInstance")
 	return
+}
+
+func (serviceDirectory *ServiceDirectory) ServiceExists(serviceType string, serviceInstance string) (exists bool) {
+	// check for serviceType
+	services, exists := serviceDirectory.index[serviceType]
+
+	if exists == false {
+		return false
+	}
+
+	for _, si := range services {
+		if si == serviceInstance {
+			return true
+		}
+	}
+
+	return false
 }

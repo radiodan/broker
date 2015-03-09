@@ -6,40 +6,60 @@ import (
 )
 
 func (b *Broker) respondToClient(msg *Message) {
+	var err error
+	var worker *Worker
+
 	switch msg.Command {
 	case COMMAND_READY:
 		log.Printf("I: %s is a client\n", msg.Sender)
 		log.Printf("I: msg.Payload - %q", msg.Payload)
 
-		correlationId := msg.Payload[0]
-		serviceType := msg.Payload[1]
-		serviceInstance := msg.Payload[2]
-
-		worker, err := b.Service.WorkerForService(serviceType, serviceInstance)
-
-		if err != nil {
-			errMsg := fmt.Sprintf("No worker for %s.%s", serviceType, serviceInstance)
+		if len(msg.Payload) < 3 {
+			errMsg := "Malformed command"
 			log.Printf("!: %s", errMsg)
 
-			b.Socket.SendMessage(msg.Sender, correlationId, "FAIL", errMsg)
+			b.Socket.SendMessage(msg.Sender, msg.Payload[0], "FAIL", errMsg)
+		}
+
+		msg.CorrelationId = msg.Payload[0]
+		msg.ServiceType = msg.Payload[1]
+		msg.ServiceInstance = msg.Payload[2]
+
+		if len(msg.Payload) > 3 {
+			msg.Payload = msg.Payload[3:]
+		} else {
+			msg.Payload = []string{}
+		}
+
+		if msg.ServiceType == "broker" {
+			// reply
+			err = b.ReplyForService(msg)
+		} else {
+			worker, err = b.Service.WorkerForService(msg.ServiceType, msg.ServiceInstance)
+		}
+
+		if err != nil {
+			errMsg := fmt.Sprintf("No worker for %s.%s", msg.ServiceType, msg.ServiceInstance)
+			log.Printf("!: %s", errMsg)
+
+			b.Socket.SendMessage(msg.Sender, msg.CorrelationId, "FAIL", errMsg)
+			return
+		}
+
+		if worker == nil {
 			return
 		}
 
 		log.Printf("I: sending data to worker %s", worker.Name)
 
-		res := []string{
-			worker.Identity,
-			COMMAND_REQUEST,
-			msg.Sender,
-		}
-		res = append(res, msg.Payload...)
+		req := NewRequest(worker.Identity, msg)
 
 		if worker.Ready == true {
-			log.Printf("I: Send REQ %q", res)
-			b.Socket.SendMessage(res)
+			log.Printf("I: Send REQ %q", req)
+			b.Socket.SendMessage(req.Serialize())
 			worker.Ready = false
 		} else {
-			worker.Queue = append([][]string{res}, worker.Queue...)
+			worker.AppendToQueue(req)
 			log.Println("I: Appended msg for later processing")
 		}
 		return

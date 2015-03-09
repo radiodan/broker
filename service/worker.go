@@ -9,7 +9,7 @@ type Worker struct {
 	Name     string     // Human readable id
 	Identity string     // Routing frame
 	Ready    bool       // Ready to recieve work
-	Queue    [][]string // Pending messages to process
+	Queue    []*Request // Pending Requests to process
 	Services Services   // Array of registered services
 	Expiry   time.Time  // Expires at unless heartbeat
 }
@@ -21,7 +21,6 @@ func NewWorker(identity string, services Services) *Worker {
 		Identity: identity,
 		Name:     name,
 		Ready:    true,
-		Queue:    make([][]string, 0),
 		Services: services,
 	}
 
@@ -30,11 +29,15 @@ func NewWorker(identity string, services Services) *Worker {
 	return worker
 }
 
+func (w *Worker) AppendToQueue(req *Request) {
+	w.Queue = append([]*Request{req}, w.Queue...)
+}
+
 func (w *Worker) Refresh() {
 	w.Expiry = time.Now().Add(HEARTBEAT_EXPIRY)
 }
 
-func (w *Worker) NextMsg() (msg []string, exists bool) {
+func (w *Worker) NextMsg() (msg *Request, exists bool) {
 	queueLength := len(w.Queue)
 	if queueLength == 0 {
 		exists = false
@@ -45,7 +48,7 @@ func (w *Worker) NextMsg() (msg []string, exists bool) {
 	msg = w.Queue[0]
 
 	if queueLength == 1 {
-		w.Queue = [][]string{}
+		w.Queue = []*Request{}
 	} else {
 		w.Queue = w.Queue[1:]
 	}

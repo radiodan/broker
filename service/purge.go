@@ -18,12 +18,16 @@ func (b *Broker) Purge() {
 			b.Service.RemoveWorker(worker)
 			b.DisconnectWorker(worker.Identity, "Heartbeat Timeout")
 
-			for _, m := range worker.Queue {
-				log.Printf("I: Cancelling queued message %v\n", m)
+			for _, req := range worker.Queue {
+				log.Printf("I: Cancelling queued message %v\n", req)
 				errMsg := fmt.Sprintf("Worker %s is no longer reachable", name)
 
-				//TODO: stop guessing message indexes
-				b.Socket.SendMessage(m[2], m[3], "FAIL", errMsg)
+				b.Socket.SendMessage(
+					req.Message.Sender,
+					req.Message.CorrelationId,
+					"FAIL",
+					errMsg,
+				)
 			}
 		}
 	}

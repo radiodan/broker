@@ -6,10 +6,13 @@ import (
 )
 
 type Message struct {
-	Sender   string
-	Protocol string
-	Command  string
-	Payload  []string
+	Sender          string
+	Protocol        string
+	Command         string
+	CorrelationId   string
+	ServiceType     string
+	ServiceInstance string
+	Payload         []string
 }
 
 func NewMessage(params []string) (*Message, error) {
@@ -28,10 +31,6 @@ func NewMessage(params []string) (*Message, error) {
 
 	if len(params) > 3 {
 		m.Payload = params[3:]
-	}
-
-	if len(m.Sender) == 0 {
-		err = errors.New("FAIL")
 	}
 
 	log.Printf("%q", m)
