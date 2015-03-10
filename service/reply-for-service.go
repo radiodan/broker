@@ -7,7 +7,6 @@ import (
 )
 
 func (b *Broker) ReplyForService(msg *Message) (err error) {
-	log.Println("ReplyForService")
 	switch msg.ServiceInstance {
 	case "discovery":
 		indexJSON, err := json.Marshal(b.Service.index)
