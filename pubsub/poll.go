@@ -43,17 +43,21 @@ func (b *Broker) Poll() {
 				data := msg[1]
 
 				log.Printf("Topic: %s, Msg: %s", topic, data)
+
+				// include topic twice to match message format
 				b.PubSocket.SendMessage(append([]string{topic}, msg...))
 
-				// iterate through wildcards, looking for matches
+				// iterate through wildcard topics, looking for matches
 				for wildTopic, topicRegex := range topics {
 					log.Printf("wildTopic: %s, topicRegex: %s", wildTopic, topicRegex)
 					matched, _ := regexp.MatchString(topicRegex, topic)
 					if matched == true {
+						// emit matched topic as well as the topic from the publisher
 						b.PubSocket.SendMessage([]string{wildTopic, topic, data})
 					}
 				}
 			case b.PubSocket:
+				log.Println("SUB message")
 				msg, _ := b.PubSocket.RecvMessage(0)
 
 				frame := msg[0]
@@ -77,9 +81,10 @@ func (b *Broker) Poll() {
 }
 
 func topicIsWild(topic string) bool {
-	// start of line, or a period,
-	// followed by * or #
-	// followed by end of line or period
+	// Definition of topic wildcard:
+	//   * start of line, or a period
+	//   * wildcard character (* or #)
+	//   * end of line or period
 	if wildTopicRegex == nil {
 		wildTopicRegex, _ = regexp.Compile("(^|\\.){1}[\\*#]{1}($|\\.){1}")
 	}
@@ -91,28 +96,33 @@ func topicIsWild(topic string) bool {
 func appendIfMissing(topics Topic, topic string) Topic {
 	_, exists := topics[topic]
 
-	// already been added, somehow
 	if exists == true {
+		// already been added, somehow
 		return topics
 	}
 
 	topicRegex := []string{}
 
+	// prepare regex
 	for _, e := range strings.Split(topic, ".") {
 		var quoted string
 
 		switch e {
 		case "*":
+			// * to match any delimited topic name
 			quoted = "[^\\.]*"
 		case "#":
+			// # to match any number of delimited topic names
 			quoted = ".*"
 		default:
+			// escape characters for regex
 			quoted = regexp.QuoteMeta(e)
 		}
 
 		topicRegex = append(topicRegex, quoted)
 	}
 
+	// add start / end of line markers to regex
 	topics[topic] = "^" + strings.Join(topicRegex, "\\.") + "$"
 
 	return topics
