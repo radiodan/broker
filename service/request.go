@@ -15,6 +15,7 @@ func NewRequest(addressee string, msg *Message) *Request {
 func (r *Request) Serialize() []string {
 	res := []string{
 		r.Addresse,
+		PROTOCOL_CLIENT,
 		COMMAND_REQUEST,
 		r.Message.Sender,
 		r.Message.CorrelationId,

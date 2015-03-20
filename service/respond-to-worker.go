@@ -45,7 +45,7 @@ func (b *Broker) respondToWorker(msg *Message) {
 		log.Printf("I: %s replying\n", msg.Sender)
 		correlationID := msg.Payload[1]
 		response := msg.Payload[2:]
-		r := []string{msg.Payload[0], correlationID, "SUCCESS"}
+		r := []string{msg.Payload[0], PROTOCOL_WORKER, correlationID, "SUCCESS"}
 		r = append(r, response...)
 
 		b.Socket.SendMessage(r)

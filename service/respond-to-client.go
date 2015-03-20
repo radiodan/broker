@@ -18,7 +18,7 @@ func (b *Broker) respondToClient(msg *Message) {
 			errMsg := "Malformed command"
 			log.Printf("!: %s", errMsg)
 
-			b.Socket.SendMessage(msg.Sender, msg.Payload[0], "FAIL", errMsg)
+			b.Socket.SendMessage(msg.Sender, PROTOCOL_BROKER, msg.Payload[0], "FAIL", errMsg)
 		}
 
 		msg.CorrelationId = msg.Payload[0]
@@ -42,7 +42,7 @@ func (b *Broker) respondToClient(msg *Message) {
 			errMsg := fmt.Sprintf("No worker for %s.%s", msg.ServiceType, msg.ServiceInstance)
 			log.Printf("!: %s", errMsg)
 
-			b.Socket.SendMessage(msg.Sender, msg.CorrelationId, "FAIL", errMsg)
+			b.Socket.SendMessage(msg.Sender, PROTOCOL_BROKER, msg.CorrelationId, "FAIL", errMsg)
 			return
 		}
 
