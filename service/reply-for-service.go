@@ -16,7 +16,7 @@ func (b *Broker) ReplyForService(msg *Message) (err error) {
 			return errors.New("Error generating service directory")
 		}
 
-		b.Socket.SendMessage(msg.Sender, msg.CorrelationId, "SUCCESS", indexJSON)
+		b.Socket.SendMessage(msg.Sender, PROTOCOL_BROKER, msg.CorrelationId, "SUCCESS", indexJSON)
 	case "service":
 		var responseType string
 		var exists bool
@@ -37,7 +37,7 @@ func (b *Broker) ReplyForService(msg *Message) (err error) {
 			responseType = "FAIL"
 		}
 
-		b.Socket.SendMessage(msg.Sender, msg.CorrelationId, responseType)
+		b.Socket.SendMessage(msg.Sender, PROTOCOL_BROKER, msg.CorrelationId, responseType)
 	default:
 		err = errors.New("broker." + msg.ServiceInstance + " not found")
 	}

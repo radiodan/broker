@@ -24,6 +24,7 @@ func (b *Broker) Purge() {
 
 				b.Socket.SendMessage(
 					req.Message.Sender,
+					PROTOCOL_BROKER,
 					req.Message.CorrelationId,
 					"FAIL",
 					errMsg,
