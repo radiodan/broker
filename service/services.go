@@ -167,10 +167,9 @@ func (serviceDirectory *ServiceDirectory) WorkerForService(serviceTypeName strin
 
 	for _, serviceInstance := range serviceType {
 		if serviceInstance == serviceInstanceName {
-			log.Printf("Match: %q", serviceDirectory.services[serviceTypeName])
 			serviceWorker, exists = serviceDirectory.services[serviceTypeName].instances[serviceInstanceName]
 			if exists {
-				log.Printf("Found serviceWorker: %q", serviceWorker)
+				log.Printf("Found serviceWorker: %q", serviceWorker.Name)
 				return
 			}
 		}
