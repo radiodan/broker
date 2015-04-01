@@ -6,12 +6,24 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/radiodan/broker/pubsub"
 	"github.com/radiodan/broker/service"
+	"os"
 	"path"
+	"time"
 )
 
 func init() {
 	// set global logging here
-	log.SetFormatter(&log.JSONFormatter{})
+	var logLevel log.Level
+
+	logLevel, err := log.ParseLevel(os.Getenv("LOG_LEVEL"))
+
+	if err != nil {
+		logLevel = log.InfoLevel
+	}
+
+	fmt.Printf("Broker started %s\n", time.Now())
+	fmt.Printf("Log Level: %s\n", logLevel)
+	log.SetLevel(logLevel)
 }
 
 func main() {

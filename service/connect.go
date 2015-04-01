@@ -12,7 +12,7 @@ func (b *Broker) connect() {
 	b.Socket, err = context.NewSocket(zmq.ROUTER)
 
 	if err != nil {
-		log.Printf("Could not start broker: %v\n", err)
+		log.Fatal("Could not start broker: %v\n", err)
 		return
 	}
 

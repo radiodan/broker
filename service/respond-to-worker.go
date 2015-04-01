@@ -8,6 +8,10 @@ import (
 )
 
 func (b *Broker) respondToWorker(msg *Message) {
+	log := log.WithFields(
+		log.Fields{"file": "service/respond-to-broker.go"},
+	)
+
 	worker, exists := b.Service.workers[msg.Sender]
 
 	switch msg.Command {
@@ -19,7 +23,7 @@ func (b *Broker) respondToWorker(msg *Message) {
 			return
 		}
 
-		log.Printf("I: %s is a worker", msg.Sender)
+		log.Debug(fmt.Sprintf("%s is a worker", msg.Sender))
 		services, err := NewServiceMessage(msg.Payload)
 
 		if err != nil {
@@ -27,7 +31,7 @@ func (b *Broker) respondToWorker(msg *Message) {
 				"Services invalid for worker %s: %s",
 				msg.Sender, strings.Join(msg.Payload, ","),
 			)
-			log.Println("!: " + errString)
+			log.Warn(errString)
 			b.DisconnectWorker(msg.Sender, errString)
 			return
 		}
@@ -38,11 +42,11 @@ func (b *Broker) respondToWorker(msg *Message) {
 			errString := fmt.Sprintf(
 				"Failed to add worker %s: %s", msg.Sender, err,
 			)
-			log.Println("!: " + errString)
+			log.Warn(errString)
 			b.DisconnectWorker(msg.Sender, errString)
 		}
 	case COMMAND_REQUEST:
-		log.Printf("I: %s replying\n", msg.Sender)
+		log.Debug(fmt.Sprintf("%s replying", msg.Sender))
 		correlationID := msg.Payload[1]
 		response := msg.Payload[2:]
 		r := []string{msg.Payload[0], PROTOCOL_WORKER, correlationID, "SUCCESS"}
@@ -81,6 +85,6 @@ func (b *Broker) respondToWorker(msg *Message) {
 		// set expiry to now, will be cleaned up during purge
 		worker.Expiry = time.Now()
 	default:
-		log.Printf("!: Unknown command %s", msg.Command)
+		log.Warn(fmt.Sprintf("Unknown command %s", msg.Command))
 	}
 }

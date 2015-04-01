@@ -9,14 +9,18 @@ func (b *Broker) respondToClient(msg *Message) {
 	var err error
 	var worker *Worker
 
+	log := log.WithFields(
+		log.Fields{"file": "service/respond-to-client.go"},
+	)
+
 	switch msg.Command {
 	case COMMAND_READY:
-		log.Printf("I: %s is a client\n", msg.Sender)
-		log.Printf("I: msg.Payload - %q", msg.Payload)
+		log.Debug(fmt.Sprintf("%s is a client\n", msg.Sender))
+		log.Debug(fmt.Sprintf("msg.Payload - %q", msg.Payload))
 
 		if len(msg.Payload) < 3 {
 			errMsg := "Malformed command"
-			log.Printf("!: %s", errMsg)
+			log.Warn(errMsg)
 
 			b.Socket.SendMessage(msg.Sender, PROTOCOL_BROKER, msg.Payload[0], "FAIL", errMsg)
 		}
@@ -40,7 +44,7 @@ func (b *Broker) respondToClient(msg *Message) {
 
 		if err != nil {
 			errMsg := fmt.Sprintf("No worker for %s.%s", msg.ServiceType, msg.ServiceInstance)
-			log.Printf("!: %s", errMsg)
+			log.Warn(errMsg)
 
 			b.Socket.SendMessage(msg.Sender, PROTOCOL_BROKER, msg.CorrelationId, "FAIL", errMsg)
 			return
@@ -50,20 +54,20 @@ func (b *Broker) respondToClient(msg *Message) {
 			return
 		}
 
-		log.Printf("I: sending data to worker %s", worker.Name)
+		log.Debug(fmt.Sprintf("Sending data to worker %s", worker.Name))
 
 		req := NewRequest(worker.Identity, msg)
 
 		if worker.Ready == true {
-			log.Printf("I: Send REQ %q", req)
+			log.Debug(fmt.Sprintf("Send REQ %q", req))
 			b.Socket.SendMessage(req.Serialize())
 			worker.Ready = false
 		} else {
 			worker.AppendToQueue(req)
-			log.Println("I: Appended msg for later processing")
+			log.Debug("Appended msg for later processing")
 		}
 		return
 	default:
-		log.Printf("!: Unknown command %s", msg.Command)
+		log.Warn(fmt.Sprintf("Unknown command %s", msg.Command))
 	}
 }

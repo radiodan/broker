@@ -12,14 +12,14 @@ func (b *Broker) connect() {
 	b.PubSocket, err = context.NewSocket(zmq.XPUB)
 
 	if err != nil {
-		log.Printf("Could not start broker: %v\n", err)
+		log.Fatal("Could not start broker: %v\n", err)
 		return
 	}
 
 	b.SubSocket, err = context.NewSocket(zmq.SUB)
 
 	if err != nil {
-		log.Printf("Could not start broker: %v\n", err)
+		log.Fatal("Could not start broker: %v\n", err)
 		return
 	}
 

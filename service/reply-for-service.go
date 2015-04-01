@@ -7,12 +7,16 @@ import (
 )
 
 func (b *Broker) ReplyForService(msg *Message) (err error) {
+	log := log.WithFields(
+		log.Fields{"file": "service/reply-for-service.go"},
+	)
+
 	switch msg.ServiceInstance {
 	case "discovery":
 		indexJSON, err := json.Marshal(b.Service.index)
 
 		if err != nil {
-			log.Printf("%q", err)
+			log.Error(err)
 			return errors.New("Error generating service directory")
 		}
 
@@ -22,7 +26,7 @@ func (b *Broker) ReplyForService(msg *Message) (err error) {
 		var exists bool
 
 		if len(msg.Payload) >= 2 {
-			log.Printf("%q", msg.Payload)
+			log.Debug(msg.Payload)
 			serviceType := msg.Payload[0]
 			serviceInstance := msg.Payload[1]
 

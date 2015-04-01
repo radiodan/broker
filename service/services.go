@@ -50,6 +50,10 @@ func NewServiceDirectory() *ServiceDirectory {
 
 func (serviceDirectory *ServiceDirectory) AddWorker(identity string, services Services) (err error) {
 	// validate services
+	log := log.WithFields(
+		log.Fields{"file": "service/services.go"},
+	)
+
 	name := fmt.Sprintf("%q", identity)
 	invalidServices := serviceDirectory.validateServicesForWorker(name, services)
 
@@ -86,15 +90,18 @@ func (serviceDirectory *ServiceDirectory) AddWorker(identity string, services Se
 
 		// register serviceInstance, or err if already found
 		for _, serviceInstanceName := range serviceInstances {
-			log.Printf("Adding worker %s to %s.%s",
-				worker.Name, serviceTypeName, serviceInstanceName)
+			log.Info(
+				fmt.Sprintf("Adding worker %s to %s.%s",
+					worker.Name, serviceTypeName, serviceInstanceName),
+			)
 			serviceType.instances[serviceInstanceName] = worker
 			// add to index
 			serviceDirectory.index[serviceTypeName] = append(serviceDirectory.index[serviceTypeName], serviceInstanceName)
 		}
 
 	}
-	log.Printf("?: Worker - %q", worker)
+
+	log.Debug(fmt.Sprintf("Worker - %q", worker))
 
 	return
 }
@@ -156,6 +163,10 @@ func (serviceDirectory *ServiceDirectory) validateServicesForWorker(name string,
 
 func (serviceDirectory *ServiceDirectory) WorkerForService(serviceTypeName string, serviceInstanceName string) (serviceWorker *Worker, err error) {
 	// check for serviceType
+	log := log.WithFields(
+		log.Fields{"file": "service/services.go"},
+	)
+
 	serviceType, exists := serviceDirectory.index[serviceTypeName]
 
 	if !exists {
@@ -163,13 +174,13 @@ func (serviceDirectory *ServiceDirectory) WorkerForService(serviceTypeName strin
 		return
 	}
 
-	log.Printf("Found serviceType %q", serviceType)
+	log.Debug("Found serviceType %q", serviceType)
 
 	for _, serviceInstance := range serviceType {
 		if serviceInstance == serviceInstanceName {
 			serviceWorker, exists = serviceDirectory.services[serviceTypeName].instances[serviceInstanceName]
 			if exists {
-				log.Printf("Found serviceWorker: %q", serviceWorker.Name)
+				log.Debug("Found serviceWorker: %q", serviceWorker.Name)
 				return
 			}
 		}

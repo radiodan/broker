@@ -1,6 +1,7 @@
 package pubsub
 
 import (
+	"fmt"
 	log "github.com/Sirupsen/logrus"
 	zmq "github.com/pebbe/zmq4"
 	"regexp"
@@ -14,6 +15,10 @@ type Topic map[string]string
 var wildTopicRegex *regexp.Regexp
 
 func (b *Broker) Poll() {
+	log := log.WithFields(
+		log.Fields{"file": "pubsub/poll.go"},
+	)
+
 	b.connect()
 	runtime.SetFinalizer(b, (*Broker).Close)
 
@@ -31,7 +36,7 @@ func (b *Broker) Poll() {
 		polled, err := poller.Poll(1000 * time.Millisecond)
 
 		if err != nil {
-			log.Printf("!: %q", err)
+			log.Error(err)
 			break
 		}
 
@@ -42,14 +47,14 @@ func (b *Broker) Poll() {
 				topic := msg[0]
 				data := msg[1]
 
-				log.Printf("Topic: %s, Msg: %s", topic, data)
+				log.Debug(fmt.Sprintf("Topic: %s, Msg: %s", topic, data))
 
 				// include topic twice to match message format
 				b.PubSocket.SendMessage(append([]string{topic}, msg...))
 
 				// iterate through wildcard topics, looking for matches
 				for wildTopic, topicRegex := range topics {
-					log.Printf("wildTopic: %s, topicRegex: %s", wildTopic, topicRegex)
+					log.Debug(fmt.Sprintf("wildTopic: %s, topicRegex: %s", wildTopic, topicRegex))
 					matched, _ := regexp.MatchString(topicRegex, topic)
 					if matched == true {
 						// emit matched topic as well as the topic from the publisher
@@ -57,7 +62,6 @@ func (b *Broker) Poll() {
 					}
 				}
 			case b.PubSocket:
-				log.Println("SUB message")
 				msg, _ := b.PubSocket.RecvMessage(0)
 
 				frame := msg[0]
@@ -68,12 +72,14 @@ func (b *Broker) Poll() {
 					if topicIsWild(topic) == true {
 						topics = appendIfMissing(topics, topic)
 					}
-					log.Printf("Subscribed: %s", topic)
+					log.Debug(fmt.Sprintf("Subscribed: %s", topic))
 				case 0:
-					log.Printf("UnSubscribed: %s", topic)
+					log.Debug(fmt.Sprintf("UnSubscribed: %s", topic))
 					if topicIsWild(topic) == true {
 						delete(topics, topic)
 					}
+				default:
+					log.Warn(fmt.Sprintf("Unknown Frame: %v", msg))
 				}
 			}
 		}

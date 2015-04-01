@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -16,6 +17,10 @@ type Message struct {
 }
 
 func NewMessage(params []string) (*Message, error) {
+	log := log.WithFields(
+		log.Fields{"file": "service/message.go"},
+	)
+
 	var err error
 
 	if len(params) < 3 {
@@ -33,7 +38,7 @@ func NewMessage(params []string) (*Message, error) {
 		m.Payload = params[3:]
 	}
 
-	log.Printf("%q", m)
+	log.Debug(fmt.Sprintf("New Message: %v", m))
 
 	return m, err
 }

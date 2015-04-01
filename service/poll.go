@@ -8,6 +8,10 @@ import (
 )
 
 func (b *Broker) Poll() {
+	log := log.WithFields(
+		log.Fields{"file": "service/poll.go"},
+	)
+
 	b.connect()
 	runtime.SetFinalizer(b, (*Broker).Close)
 
@@ -18,8 +22,8 @@ func (b *Broker) Poll() {
 		polled, err := poller.Poll(HEARTBEAT_INTERVAL)
 
 		if err != nil {
-			log.Println("E: Interrupted")
-			log.Printf("E: %q", err)
+			log.Error("Interrupted")
+			log.Error(err)
 			break //  Interrupted
 		}
 
@@ -27,15 +31,15 @@ func (b *Broker) Poll() {
 			msg, err := b.Socket.RecvMessage(0)
 
 			if err != nil {
-				log.Println("E: Interrupted")
-				log.Printf("%q\n", err)
+				log.Error("Interrupted")
+				log.Error(err)
 				break //  Interrupted
 			}
 
 			message, err := NewMessage(msg)
 
 			if err != nil {
-				log.Println("!: Message malformed")
+				log.Warn("Message malformed")
 				continue
 			}
 
@@ -43,7 +47,7 @@ func (b *Broker) Poll() {
 		}
 
 		if time.Now().After(b.HeartbeatAt) {
-			log.Println("I: Heartbeat")
+			log.Debug("Heartbeat")
 			b.Purge()
 			b.Heartbeat()
 		}
