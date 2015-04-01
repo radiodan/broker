@@ -2,7 +2,7 @@ package service
 
 import (
 	"errors"
-	"log"
+	log "github.com/Sirupsen/logrus"
 )
 
 type Message struct {

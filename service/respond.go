@@ -1,7 +1,7 @@
 package service
 
 import (
-	"log"
+	log "github.com/Sirupsen/logrus"
 )
 
 func (b *Broker) Respond(msg *Message) {

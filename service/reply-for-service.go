@@ -3,7 +3,7 @@ package service
 import (
 	"encoding/json"
 	"errors"
-	"log"
+	log "github.com/Sirupsen/logrus"
 )
 
 func (b *Broker) ReplyForService(msg *Message) (err error) {

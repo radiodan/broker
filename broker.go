@@ -3,11 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"github.com/radiodan/broker/pubsub"
 	"github.com/radiodan/broker/service"
-	"log"
 	"path"
 )
+
+func init() {
+	// set global logging here
+	log.SetFormatter(&log.JSONFormatter{})
+}
 
 func main() {
 	serviceLocation, pubLocation, subLocation := parseFlags()

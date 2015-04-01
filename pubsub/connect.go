@@ -1,8 +1,8 @@
 package pubsub
 
 import (
+	log "github.com/Sirupsen/logrus"
 	zmq "github.com/pebbe/zmq4"
-	"log"
 )
 
 func (b *Broker) connect() {
