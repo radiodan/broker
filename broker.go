@@ -38,20 +38,20 @@ func parseFlags() (service string, pub string, sub string) {
 
 	flag.Parse()
 
-	service = connectionPath(servicePort, serviceSocket)
-	pub = connectionPath(pubPort, pubSocket)
-	sub = connectionPath(subPort, subSocket)
+	service = connectionPath(*servicePort, *serviceSocket)
+	pub = connectionPath(*pubPort, *pubSocket)
+	sub = connectionPath(*subPort, *subSocket)
 
 	return
 }
 
-func connectionPath(port *int, socket *string) (fullPath string) {
+func connectionPath(port int, socket string) (fullPath string) {
 	switch {
-	case *socket == "":
-		fullPath = fmt.Sprintf("tcp://0.0.0.0:%v", *port)
+	case socket == "":
+		fullPath = fmt.Sprintf("tcp://0.0.0.0:%v", port)
 	default:
-		socketPath := path.Clean(*socket)
-		fullPath = fmt.Sprintf("ipc://%s", socketPath)
+		socketPath := path.Clean(socket)
+		fullPath = fmt.Sprintf("ipc://%v", socketPath)
 	}
 
 	return
