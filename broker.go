@@ -7,11 +7,11 @@ import (
 )
 
 func main() {
-	serviceLocation := "tcp://127.0.0.1:7171"
+	serviceLocation := "tcp://0.0.0.0:7171"
 	serviceBroker := service.New(serviceLocation)
 
-	pubLocation := "tcp://127.0.0.1:7172"
-	subLocation := "tcp://127.0.0.1:7173"
+	pubLocation := "tcp://0.0.0.0:7172"
+	subLocation := "tcp://0.0.0.0:7173"
 
 	pubSubBroker := pubsub.New(pubLocation, subLocation)
 
