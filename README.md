@@ -1,6 +1,10 @@
 # broker
 An experimental broker for the Radiodan ecosystem
 
+## Starting
+
+Compile binary, then run with `./broker --help` to see all available options.
+
 ## Protocol (WIP)
 We presume (but unless specificed, do not enforce) JSON as the encoding format
 for the `payload`.
