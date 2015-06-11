@@ -9,7 +9,7 @@ the official
 
 Install the prerequisites with `godep restore`.
 
-Compile binary with `go build broker`,
+Compile binary with `go build`,
 then run with `./broker --help` to see all available options.
 
 ## Protocol (WIP)
