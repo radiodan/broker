@@ -2,8 +2,15 @@
 An experimental broker for the Radiodan ecosystem
 
 ## Starting
+Make sure you have ZeroMQ library bindings for 4.X. For osx and homebrew,
+you can install these with `brew install zeromq`. Otherwise, please follow
+the official
+[installation instructions](http://zeromq.org/intro:get-the-software).
 
-Compile binary, then run with `./broker --help` to see all available options.
+Install the prerequisites with `godep restore`.
+
+Compile binary with `go build broker`,
+then run with `./broker --help` to see all available options.
 
 ## Protocol (WIP)
 We presume (but unless specificed, do not enforce) JSON as the encoding format
